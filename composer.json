@@ -1,0 +1,40 @@
+{
+    "name": "thefountainhead/laravel-questionnaire",
+    "description": "Generic weighted questionnaire engine for Laravel",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.2",
+        "illuminate/database": "^11.0|^12.0",
+        "illuminate/support": "^11.0|^12.0",
+        "illuminate/notifications": "^11.0|^12.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0|^10.0",
+        "pestphp/pest": "^3.0|^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "TheFountainhead\\Questionnaire\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TheFountainhead\\Questionnaire\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "TheFountainhead\\Questionnaire\\QuestionnaireServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
