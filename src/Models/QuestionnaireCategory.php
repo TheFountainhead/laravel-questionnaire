@@ -1,0 +1,28 @@
+<?php
+
+namespace TheFountainhead\Questionnaire\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class QuestionnaireCategory extends Model
+{
+    protected function casts(): array
+    {
+        return [
+            'weight' => 'decimal:2',
+            'sort_order' => 'integer',
+        ];
+    }
+
+    public function questionnaire(): BelongsTo
+    {
+        return $this->belongsTo(Questionnaire::class);
+    }
+
+    public function questions(): HasMany
+    {
+        return $this->hasMany(QuestionnaireQuestion::class)->orderBy('sort_order');
+    }
+}
