@@ -20,6 +20,7 @@ abstract class TestCase extends BaseTestCase
         $app['config']->set('questionnaire.models.user', \Illuminate\Foundation\Auth\User::class);
         $app['config']->set('questionnaire.models.company', \Illuminate\Foundation\Auth\User::class);
         $app['config']->set('questionnaire.models.subject', \Illuminate\Foundation\Auth\User::class);
+        $app['config']->set('questionnaire.table_prefix', 'qe_');
     }
 
     protected function defineDatabaseMigrations(): void

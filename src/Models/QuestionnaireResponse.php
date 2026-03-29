@@ -8,6 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class QuestionnaireResponse extends Model
 {
+    public function getTable(): string
+    {
+        return config('questionnaire.table_prefix', 'qe_').'questionnaire_responses';
+    }
+
     protected function casts(): array
     {
         return [

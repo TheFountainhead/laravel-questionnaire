@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class QuestionnaireResponseAnswer extends Model
 {
+    public function getTable(): string
+    {
+        return config('questionnaire.table_prefix', 'qe_').'questionnaire_response_answers';
+    }
+
     public function response(): BelongsTo
     {
         return $this->belongsTo(QuestionnaireResponse::class, 'questionnaire_response_id');

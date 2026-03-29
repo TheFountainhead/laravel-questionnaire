@@ -9,6 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Questionnaire extends Model
 {
+    public function getTable(): string
+    {
+        return config('questionnaire.table_prefix', 'qe_').'questionnaires';
+    }
+
     protected function casts(): array
     {
         return [

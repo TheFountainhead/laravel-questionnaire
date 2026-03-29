@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class QuestionnaireOption extends Model
 {
+    public function getTable(): string
+    {
+        return config('questionnaire.table_prefix', 'qe_').'questionnaire_options';
+    }
+
     protected function casts(): array
     {
         return [

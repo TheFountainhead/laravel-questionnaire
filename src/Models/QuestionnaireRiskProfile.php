@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class QuestionnaireRiskProfile extends Model
 {
+    public function getTable(): string
+    {
+        return config('questionnaire.table_prefix', 'qe_').'questionnaire_risk_profiles';
+    }
+
     protected function casts(): array
     {
         return [
