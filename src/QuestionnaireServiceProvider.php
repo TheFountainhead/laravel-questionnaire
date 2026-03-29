@@ -13,11 +13,9 @@ class QuestionnaireServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        if ($this->app->runningInConsole()) {
-            $this->publishesMigrations([
-                __DIR__.'/../database/migrations' => database_path('migrations'),
-            ], 'questionnaire-migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
+        if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__.'/../config/questionnaire.php' => config_path('questionnaire.php'),
             ], 'questionnaire-config');
