@@ -10,6 +10,10 @@ return new class extends Migration
     {
         $p = $this->prefix();
 
+        if (Schema::hasTable($p.'questionnaire_response_answers')) {
+            return;
+        }
+
         Schema::create($p.'questionnaire_response_answers', function (Blueprint $table) use ($p) {
             $table->id();
             $table->unsignedBigInteger('questionnaire_response_id');

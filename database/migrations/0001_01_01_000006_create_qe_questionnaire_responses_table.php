@@ -10,6 +10,10 @@ return new class extends Migration
     {
         $p = $this->prefix();
 
+        if (Schema::hasTable($p.'questionnaire_responses')) {
+            return;
+        }
+
         Schema::create($p.'questionnaire_responses', function (Blueprint $table) use ($p) {
             $table->id();
             $table->foreignId('questionnaire_id')->constrained($p.'questionnaires')->cascadeOnDelete();
