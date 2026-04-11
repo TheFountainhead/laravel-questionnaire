@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class QuestionnaireResponseAnswer extends Model
 {
+    protected $fillable = [
+        'questionnaire_response_id',
+        'questionnaire_question_id',
+        'questionnaire_option_id',
+    ];
+
     public function getTable(): string
     {
         return config('questionnaire.table_prefix', 'qe_').'questionnaire_response_answers';

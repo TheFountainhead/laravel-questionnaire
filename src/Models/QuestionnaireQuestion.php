@@ -9,6 +9,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class QuestionnaireQuestion extends Model
 {
+    protected $fillable = [
+        'questionnaire_category_id',
+        'text',
+        'type',
+        'is_scored',
+        'sort_order',
+    ];
+
     public function getTable(): string
     {
         return config('questionnaire.table_prefix', 'qe_').'questionnaire_questions';

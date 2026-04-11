@@ -7,6 +7,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class QuestionnaireOption extends Model
 {
+    protected $fillable = [
+        'questionnaire_question_id',
+        'text',
+        'points',
+        'sort_order',
+    ];
+
     public function getTable(): string
     {
         return config('questionnaire.table_prefix', 'qe_').'questionnaire_options';

@@ -7,6 +7,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class QuestionnaireRiskProfile extends Model
 {
+    protected $fillable = [
+        'questionnaire_id',
+        'name',
+        'min_score',
+        'max_score',
+        'sort_order',
+    ];
+
     public function getTable(): string
     {
         return config('questionnaire.table_prefix', 'qe_').'questionnaire_risk_profiles';

@@ -8,6 +8,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class QuestionnaireResponse extends Model
 {
+    protected $fillable = [
+        'questionnaire_id',
+        'subject_id',
+        'completed_by',
+        'weighted_score',
+        'questionnaire_risk_profile_id',
+        'completed_at',
+        'locked_at',
+    ];
+
     public function getTable(): string
     {
         return config('questionnaire.table_prefix', 'qe_').'questionnaire_responses';
