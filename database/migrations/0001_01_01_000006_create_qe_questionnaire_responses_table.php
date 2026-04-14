@@ -14,11 +14,29 @@ return new class extends Migration
             return;
         }
 
-        Schema::create($p.'questionnaire_responses', function (Blueprint $table) use ($p) {
+        $subjectTable = $this->getSubjectTable();
+        $userTable = $this->getUserTable();
+        $subjectTableExists = Schema::hasTable($subjectTable);
+        $userTableExists = Schema::hasTable($userTable);
+
+        Schema::create($p.'questionnaire_responses', function (Blueprint $table) use ($p, $subjectTable, $userTable, $subjectTableExists, $userTableExists) {
             $table->id();
             $table->foreignId('questionnaire_id')->constrained($p.'questionnaires')->cascadeOnDelete();
-            $table->foreignId('subject_id')->constrained($this->getSubjectTable())->cascadeOnDelete();
-            $table->foreignId('completed_by')->constrained($this->getUserTable())->cascadeOnDelete();
+
+            // Subject/user tables may not exist yet when package migrations run
+            // before application migrations. Create columns without FK constraints.
+            if ($subjectTableExists) {
+                $table->foreignId('subject_id')->constrained($subjectTable)->cascadeOnDelete();
+            } else {
+                $table->unsignedBigInteger('subject_id');
+            }
+
+            if ($userTableExists) {
+                $table->foreignId('completed_by')->constrained($userTable)->cascadeOnDelete();
+            } else {
+                $table->unsignedBigInteger('completed_by');
+            }
+
             $table->decimal('weighted_score', 5, 2)->nullable();
             $table->unsignedBigInteger('questionnaire_risk_profile_id')->nullable();
             $table->timestamp('completed_at')->nullable();
