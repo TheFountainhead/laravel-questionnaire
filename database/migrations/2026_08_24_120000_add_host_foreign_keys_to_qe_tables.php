@@ -38,7 +38,6 @@ return new class extends Migration
             'company_id',
             $this->tableFor('company'),
             $p.'q_company_fk',
-            nullable: true,
         );
 
         $this->addForeignKey(
@@ -60,12 +59,18 @@ return new class extends Migration
     {
         $p = $this->prefix();
 
+        // 🪤 Drop KUN de navne vi selv satte. up() springer over naar vaerten
+        // allerede har noeglen, saa vores navn findes ikke paa en frisk
+        // installation — et ubetinget drop gav der:
+        //   SQLSTATE[42000] 1091: Can't DROP 'qe_q_company_fk'
+        // Fejlen er BETINGET: paa opgraderingsstien satte up() alle tre selv,
+        // og rollback var groen. Derfor gemte den sig. Maalt 24-08-2026.
         foreach ([
             [$p.'questionnaires', $p.'q_company_fk'],
             [$p.'questionnaire_responses', $p.'qr_subject_fk'],
             [$p.'questionnaire_responses', $p.'qr_completed_by_fk'],
         ] as [$table, $name]) {
-            if (! Schema::hasTable($table)) {
+            if (! Schema::hasTable($table) || ! $this->constraintExists($table, $name)) {
                 continue;
             }
 
@@ -80,7 +85,6 @@ return new class extends Migration
         string $column,
         string $referencedTable,
         string $constraintName,
-        bool $nullable = false,
     ): void {
         if (! Schema::hasTable($table) || ! Schema::hasColumn($table, $column)) {
             return;
@@ -100,25 +104,51 @@ return new class extends Migration
         // sat den samme noegle under sit eget navn (Frankston-master goer det i
         // 2026_04_13_add_missing_foreign_keys), og et navne-tjek ville ikke se
         // den ⇒ to identiske constraints paa samme kolonne. Maalt 24-08-2026.
-        if ($this->columnHasForeignKey($table, $column)) {
+        if ($this->columnPointsAt($table, $column, $referencedTable)) {
             return;
         }
 
-        Schema::table($table, function (Blueprint $blueprint) use ($column, $referencedTable, $constraintName, $nullable) {
-            if ($nullable) {
-                $blueprint->foreign($column, $constraintName)->references('id')->on($referencedTable)->nullOnDelete();
-
-                return;
-            }
-
+        // 🪤 ALTID cascadeOnDelete — samme semantik som create-migrationerne.
+        // Foerste udgave brugte nullOnDelete for company_id, saa to
+        // installationer af SAMME pakke fik forskellig adfaerd ved sletning af
+        // et team: enten forsvandt spoergeskemaerne, eller company_id blev
+        // NULL. Create-migrationen er den etablerede adfaerd og den produktion
+        // koerer paa; denne migration skal rette sig efter den.
+        Schema::table($table, function (Blueprint $blueprint) use ($column, $referencedTable, $constraintName) {
             $blueprint->foreign($column, $constraintName)->references('id')->on($referencedTable)->cascadeOnDelete();
         });
     }
 
-    private function columnHasForeignKey(string $table, string $column): bool
+    /**
+     * Peger kolonnen allerede paa den RIGTIGE tabel?
+     *
+     * 🪤 Tjekker baade kolonne OG maaltabel. En tidligere udgave spurgte kun
+     * "har kolonnen en FK?" — den sprang saa over selvom noeglen pegede paa en
+     * FORKERT tabel, og efterlod fejlen permanent. Praecis den tavse
+     * degradering denne migration findes for at fjerne.
+     *
+     * 🪤 Kraever ogsaa at noeglen er ENKELT-kolonne: en sammensat noegle der
+     * tilfaeldigvis indeholder kolonnen er ikke den noegle vi vil saette.
+     */
+    private function columnPointsAt(string $table, string $column, string $referencedTable): bool
     {
         foreach (Schema::getForeignKeys($table) as $foreignKey) {
-            if (in_array($column, $foreignKey['columns'] ?? [], true)) {
+            if (($foreignKey['columns'] ?? []) !== [$column]) {
+                continue;
+            }
+
+            if (($foreignKey['foreign_table'] ?? null) === $referencedTable) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function constraintExists(string $table, string $constraintName): bool
+    {
+        foreach (Schema::getForeignKeys($table) as $foreignKey) {
+            if (($foreignKey['name'] ?? null) === $constraintName) {
                 return true;
             }
         }
