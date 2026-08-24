@@ -42,9 +42,22 @@ return new class extends Migration
             return;
         }
 
-        Schema::create($this->prefix().'questionnaires', function (Blueprint $table) {
+        // 🪤 Samme degradering som 000006: vaertens company-tabel findes ikke
+        // noedvendigvis endnu. Uden dette tjek fejler migrate HAARDT paa
+        // pakkens FOERSTE fil med 1824 — praecis den fejlklasse omdoebningen
+        // findes for at fjerne. Noeglen saettes i saa fald af
+        // 2026_08_24_120000_add_host_foreign_keys_to_qe_tables.
+        $companyTable = $this->getCompanyTable();
+        $companyTableExists = Schema::hasTable($companyTable);
+
+        Schema::create($this->prefix().'questionnaires', function (Blueprint $table) use ($companyTable, $companyTableExists) {
             $table->id();
-            $table->foreignId('company_id')->nullable()->constrained($this->getCompanyTable())->cascadeOnDelete();
+
+            if ($companyTableExists) {
+                $table->foreignId('company_id')->nullable()->constrained($companyTable)->cascadeOnDelete();
+            } else {
+                $table->unsignedBigInteger('company_id')->nullable();
+            }
             $table->string('type');
             $table->string('name');
             $table->text('description')->nullable();

@@ -108,6 +108,24 @@ return new class extends Migration
             return;
         }
 
+        // 🚨 Peger kolonnen paa en FORKERT tabel, saa TILFOEJ ikke bare ved
+        // siden af: to FK'er paa samme kolonne betyder at BEGGE skal opfyldes.
+        // Maalt: med en forael­det noegle mod `legacy_subjects` blev
+        // `insert subject_id=2` (findes kun i `clients`) blokeret med 1452 —
+        // en skrivelaas paa gyldige raekker.
+        //
+        // Vi dropper IKKE den fremmede noegle: en migration i en pakke maa ikke
+        // fjerne en constraint vaerten selv har sat, og vi kan ikke vide om den
+        // er bevidst. Meld hoejt og spring over, saa et menneske kan afgoere det.
+        if ($this->columnHasAnyForeignKey($table, $column)) {
+            logger()->warning(
+                "[questionnaire] {$table}.{$column} har allerede en fremmednoegle mod en ANDEN tabel end {$referencedTable}. "
+                .'Springer over: to noegler paa samme kolonne ville kraeve at begge opfyldes. Ryd op manuelt.'
+            );
+
+            return;
+        }
+
         // 🪤 ALTID cascadeOnDelete — samme semantik som create-migrationerne.
         //
         // 🔑 For company_id er kombinationen nullable + cascade BEVIDST, ikke
@@ -145,6 +163,17 @@ return new class extends Migration
             }
 
             if (($foreignKey['foreign_table'] ?? null) === $referencedTable) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function columnHasAnyForeignKey(string $table, string $column): bool
+    {
+        foreach (Schema::getForeignKeys($table) as $foreignKey) {
+            if (in_array($column, $foreignKey['columns'] ?? [], true)) {
                 return true;
             }
         }
