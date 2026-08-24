@@ -109,6 +109,13 @@ return new class extends Migration
         }
 
         // 🪤 ALTID cascadeOnDelete — samme semantik som create-migrationerne.
+        //
+        // 🔑 For company_id er kombinationen nullable + cascade BEVIDST, ikke
+        // en inkonsistens: `is_template` i samme tabel betyder at et
+        // SKABELON-spoergeskema ikke hoerer til nogen kunde (deraf nullable),
+        // mens et kundespecifikt hoerer til én — og skal forsvinde med den.
+        // `nullOnDelete` ville forvandle en slettet kundes spoergeskema til en
+        // GLOBAL SKABELON. Det er en semantisk fejl, ikke bare en afvigelse.
         // Foerste udgave brugte nullOnDelete for company_id, saa to
         // installationer af SAMME pakke fik forskellig adfaerd ved sletning af
         // et team: enten forsvandt spoergeskemaerne, eller company_id blev
