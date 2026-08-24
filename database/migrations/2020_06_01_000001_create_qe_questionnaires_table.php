@@ -4,23 +4,30 @@
  * 🚨 TIDSSTEMPLET ER BEVIDST 2020_06_01 — laeg det ALDRIG tilbage til
  * 0001_01_01.
  *
- * Praefikset 0001_01_01 er Laravels konvention for framework-migrationer der
- * skal koere ALLERFOERST. Men denne pakkes tabeller har en fremmednoegle UDAD
- * til vaertsapplikationens company-tabel (config('questionnaire.models.company'),
- * typisk `teams`), og den kan pr. definition ikke eksistere endnu paa det
- * tidspunkt.
+ * Praefikset 0001_01_01 er Laravels konvention for FRAMEWORKETS egne
+ * migrationer (users, cache, jobs), som skal koere allerfoerst. Men denne
+ * pakkes tabeller har fremmednoegler UDAD til vaertsapplikationens tabeller,
+ * og de kan pr. definition ikke eksistere paa det tidspunkt.
  *
  * Maalt 24-08-2026 mod en frisk MySQL 8.4:
  *   SQLSTATE[HY000] 1824: Failed to open the referenced table 'teams'
- * Migrationen stoppede paa nr. 2 af ~610; kun 2 tabeller blev oprettet.
+ * Migrationen fejlede paa den FOERSTE af pakkens filer, og vaertsprojektets
+ * migrate stoppede efter 2 tabeller (migrations + qe_questionnaires).
+ * Med 2020_06_01: 164 tabeller.
  *
  * 🔑 Hvorfor ingen opdagede det foer: sqlite haandhaever ikke fremmednoegler
  * ved ALTER TABLE som standard, og vaertsprojektets CI koerer sqlite. Fejlen
- * var derfor usynlig fra pakken blev tilfoejet til foerste MySQL-opsaetning
- * fra bunden.
+ * var usynlig fra pakken blev tilfoejet til foerste MySQL-opsaetning fra bunden.
  *
- * 2020_06_01 ligger efter Jetstream/Teams (2020_05_21) og foer alt moderne, saa
- * raekkefoelgen holder uanset hvornaar vaertsappen selv blev startet.
+ * 2020_06_01 ligger efter Jetstream/Teams (2020_05_21).
+ *
+ * 🪤 Det er IKKE nok for alle vaertstabeller. `subject` er konfigurerbar, og i
+ * Frankston-master er det `clients`, oprettet 2023_03_07 — altsaa EFTER dette
+ * tidsstempel. Create-migrationen falder da tilbage til en bar
+ * unsignedBigInteger uden constraint. Derfor findes
+ * 2026_08_24_120000_add_host_foreign_keys_to_qe_tables, som koerer SIDST og
+ * saetter de udadgaaende noegler uanset vaertens raekkefoelge. Et tidsstempel
+ * alene kan ikke loese det; det kan kun flytte problemet.
  */
 
 use Illuminate\Database\Migrations\Migration;
@@ -47,6 +54,14 @@ return new class extends Migration
             $table->index(['company_id', 'type']);
         });
     }
+
+    public function down(): void
+    {
+        // 🪤 Uden en down() kaster `migrate:rollback` fatal error — Laravels
+        // Migration er abstrakt og har ingen default. Fundet ved review 24-08-2026.
+        Schema::dropIfExists($this->prefix().'questionnaires');
+    }
+
 
     protected function getCompanyTable(): string
     {

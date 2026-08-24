@@ -2,25 +2,12 @@
 
 /*
  * 🚨 TIDSSTEMPLET ER BEVIDST 2020_06_01 — laeg det ALDRIG tilbage til
- * 0001_01_01.
+ * 0001_01_01. Fuld begrundelse i
+ * 2020_06_01_000001_create_qe_questionnaires_table.php.
  *
- * Praefikset 0001_01_01 er Laravels konvention for framework-migrationer der
- * skal koere ALLERFOERST. Men denne pakkes tabeller har en fremmednoegle UDAD
- * til vaertsapplikationens company-tabel (config('questionnaire.models.company'),
- * typisk `teams`), og den kan pr. definition ikke eksistere endnu paa det
- * tidspunkt.
- *
- * Maalt 24-08-2026 mod en frisk MySQL 8.4:
- *   SQLSTATE[HY000] 1824: Failed to open the referenced table 'teams'
- * Migrationen stoppede paa nr. 2 af ~610; kun 2 tabeller blev oprettet.
- *
- * 🔑 Hvorfor ingen opdagede det foer: sqlite haandhaever ikke fremmednoegler
- * ved ALTER TABLE som standard, og vaertsprojektets CI koerer sqlite. Fejlen
- * var derfor usynlig fra pakken blev tilfoejet til foerste MySQL-opsaetning
- * fra bunden.
- *
- * 2020_06_01 ligger efter Jetstream/Teams (2020_05_21) og foer alt moderne, saa
- * raekkefoelgen holder uanset hvornaar vaertsappen selv blev startet.
+ * Kort: pakkens tabeller har fremmednoegler UDAD til vaertens tabeller, som
+ * ikke findes naar 0001_01_01 koerer (MySQL: 1824). Udadgaaende noegler
+ * saettes af 2026_08_24_120000_add_host_foreign_keys_to_qe_tables.
  */
 
 use Illuminate\Database\Migrations\Migration;
@@ -70,6 +57,14 @@ return new class extends Migration
             $table->index(['subject_id', 'completed_at']);
         });
     }
+
+    public function down(): void
+    {
+        // 🪤 Uden en down() kaster `migrate:rollback` fatal error — Laravels
+        // Migration er abstrakt og har ingen default. Fundet ved review 24-08-2026.
+        Schema::dropIfExists($this->prefix().'questionnaire_responses');
+    }
+
 
     protected function getSubjectTable(): string
     {
